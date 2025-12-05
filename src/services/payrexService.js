@@ -25,8 +25,8 @@ export async function createQrphPaymentIntent({ amount, currency = 'PHP', refere
     metadata: reference ? { reference } : undefined
   });
 
-  // The exact QRPH field name depends on PayRex's response shape.
-  // Adjust these accessors according to their docs if needed.
+  console.log('PayRex paymentIntent response:', JSON.stringify(intent, null, 2));
+
   const qrString =
     intent.qrph?.qr_string ||
     intent.qrph_qr_string ||

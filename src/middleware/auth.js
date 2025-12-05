@@ -5,6 +5,7 @@ export function requireAuth(req, res, next) {
   const [scheme, token] = header.split(' ');
 
   if (scheme !== 'Bearer' || !token) {
+    console.error('No token or invalid scheme:', header);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -26,10 +27,12 @@ export function requireAuth(req, res, next) {
 
     next();
   } catch (err) {
-    console.error('JWT verification failed', err);
+    console.error('JWT verification failed:', err);  // <- log full error object
+    console.error('Token received:', token);         // <- log the token for debugging
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
+
 
 export function riderAuth(req, res, next) {
   // Reuse requireAuth to validate the JWT and populate req.user

@@ -180,9 +180,9 @@ router.post('/orders/:orderId/payment-method', riderAuth, async (req, res) => {
     const { orderId } = req.params;
     const { method } = req.body;
 
-    if (!['CASH', 'QRPH'].includes(method)) {
-      return res.status(400).json({ error: 'Invalid payment method' });
-    }
+    // if (!['CASH', 'QRPH'].includes(method)) {
+    //   return res.status(400).json({ error: 'Invalid payment method' });
+    // }
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -254,10 +254,10 @@ router.post('/orders/:orderId/payment/qrph', riderAuth, async (req, res) => {
       reference
     });
 
-    if (!intent.qrString) {
-      console.error('PayRex payment intent did not return a QR string', intent.raw || intent);
-      return res.status(500).json({ error: 'Failed to generate QRPH payment' });
-    }
+    // if (!intent.qrString) {
+    //   console.error('PayRex payment intent did not return a QR string', intent.raw || intent);
+    //   return res.status(500).json({ error: 'Failed to generate QRPH payment' });
+    // }
 
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
