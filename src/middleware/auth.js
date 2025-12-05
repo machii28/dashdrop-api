@@ -30,3 +30,20 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
+
+export function riderAuth(req, res, next) {
+  // Reuse requireAuth to validate the JWT and populate req.user
+  requireAuth(req, res, (err) => {
+    if (err) {
+      // requireAuth already handled the response
+      return;
+    }
+
+    if (!req.user || !req.user.riderId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    req.riderId = req.user.riderId;
+    next();
+  });
+}

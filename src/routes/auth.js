@@ -6,6 +6,59 @@ import { supabase } from '../lib/supabaseClient.js';
 
 const router = express.Router();
 
+router.post('/register', async (req, res) => {
+  try {
+    const { name, phone, password } = req.body;
+
+    if (!name || !phone || !password) {
+      return res.status(400).json({ error: 'name, phone and password are required' });
+    }
+
+    const { data: existing, error: existingError } = await supabase
+      .from('riders')
+      .select('id')
+      .eq('phone', phone)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error('Supabase error on register (check existing)', existingError);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (existing) {
+      return res.status(409).json({ error: 'Rider with this phone already exists' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const { data: rider, error: insertError } = await supabase
+      .from('riders')
+      .insert({
+        name,
+        phone,
+        password_hash: passwordHash
+      })
+      .select('id, name, phone')
+      .maybeSingle();
+
+    if (insertError || !rider) {
+      console.error('Supabase error on register (insert)', insertError);
+      return res.status(500).json({ error: 'Failed to create rider' });
+    }
+
+    return res.status(201).json({
+      rider: {
+        id: rider.id,
+        name: rider.name,
+        phone: rider.phone
+      }
+    });
+  } catch (err) {
+    console.error('Unexpected error on register', err);
+    return res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
