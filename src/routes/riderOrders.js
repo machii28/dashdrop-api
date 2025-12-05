@@ -289,6 +289,7 @@ router.post('/orders/:orderId/payment/qrph', riderAuth, async (req, res) => {
     return res.json({
       paymentId: payment.id,
       qrphPayload: {
+        client_secret: intent.clientSecret,
         qrString: intent.qrString,
         amount: order.cod_amount,
         currency: 'PHP',

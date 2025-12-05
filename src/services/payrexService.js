@@ -25,7 +25,7 @@ export async function createQrphPaymentIntent({ amount, currency = 'PHP', refere
     metadata: reference ? { reference } : undefined
   });
 
-  console.log('PayRex paymentIntent response:', JSON.stringify(intent, null, 2));
+  console.log('PayRex paymentIntent response:', JSON.stringify(intent.clientSecret, null, 2));
 
   const qrString =
     intent.qrph?.qr_string ||
@@ -36,6 +36,7 @@ export async function createQrphPaymentIntent({ amount, currency = 'PHP', refere
   return {
     id: intent.id,
     reference: reference || intent.id,
+    clientSecret: intent.clientSecret,
     qrString,
     raw: intent
   };
