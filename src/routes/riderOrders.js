@@ -2,6 +2,7 @@ import express from 'express';
 
 import { supabase } from '../lib/supabaseClient.js';
 import { riderAuth } from '../middleware/auth.js';
+import { createQrphPaymentIntent } from '../services/payrexService.js';
 
 const router = express.Router();
 
@@ -245,7 +246,18 @@ router.post('/orders/:orderId/payment/qrph', riderAuth, async (req, res) => {
     }
 
     const reference = `ORDER-${order.order_number}`;
-    const qrString = '0002010102...';
+
+    // Create PayRex payment intent for QRPH
+    const intent = await createQrphPaymentIntent({
+      amount: order.cod_amount,
+      currency: 'PHP',
+      reference
+    });
+
+    if (!intent.qrString) {
+      console.error('PayRex payment intent did not return a QR string', intent.raw || intent);
+      return res.status(500).json({ error: 'Failed to generate QRPH payment' });
+    }
 
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
@@ -253,8 +265,8 @@ router.post('/orders/:orderId/payment/qrph', riderAuth, async (req, res) => {
         order_id: order.id,
         method: 'QRPH',
         status: 'QR_GENERATED',
-        qrph_reference: reference,
-        qrph_qr_string: qrString,
+        qrph_reference: intent.reference || intent.id,
+        qrph_qr_string: intent.qrString,
         amount: order.cod_amount
       })
       .select('*')
@@ -277,10 +289,10 @@ router.post('/orders/:orderId/payment/qrph', riderAuth, async (req, res) => {
     return res.json({
       paymentId: payment.id,
       qrphPayload: {
-        qrString,
+        qrString: intent.qrString,
         amount: order.cod_amount,
         currency: 'PHP',
-        reference
+        reference: intent.reference || reference
       }
     });
   } catch (err) {
